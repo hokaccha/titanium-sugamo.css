@@ -6,7 +6,12 @@ xhr.timeout = 1000000;
 xhr.open("GET","http://api.twitter.com/1/statuses/user_timeline.json?screen_name=sugamo_css");
 
 xhr.onload = function() {
-	var tweets = eval('('+this.responseText+')');
+	var tweets = JSON.parse(this.responseText);
+	if (tweets.error) {
+		error(tweets.error);
+		return;
+	}
+
 	var data = [];
 	for (var c=0;c<tweets.length;c++){
 
@@ -86,8 +91,29 @@ xhr.onload = function() {
 	// Create the tableView and add it to the window.
 	var tableview = Titanium.UI.createTableView({data:data,minRowHeight:58});
 	Titanium.UI.currentWindow.add(tableview);
+
+	destroy();
 };
+
+xhr.onerror = function() {
+	error('データの取得に失敗しました');
+	destroy();
+};
+
 xhr.send();
+
+function error(message) {
+	Titanium.UI.createAlertDialog({
+		title: 'Error',
+		message: message
+	}).show();
+}
+
+function destroy() {
+	xhr.onload = null;
+	xhr.onerror = null;
+	xhr = null;
+}
 
 function strtotime (str, now) {
 	// Emlulates the PHP strtotime function in JavaScript
